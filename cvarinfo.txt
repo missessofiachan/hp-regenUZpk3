@@ -1,0 +1,6 @@
+server
+int mod_regen_cap = 25;
+server
+int mod_regen_amount = 5;
+server
+int mod_regen_delay = 5;

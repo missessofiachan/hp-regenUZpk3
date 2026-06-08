@@ -1,0 +1,58 @@
+version
+"4.11"
+
+class HealthRegenHandler : EventHandler
+    {
+    int damageCooldown[MAXPLAYERS];
+
+        override void WorldTick()
+        {
+            // Check once every second (35 tics)
+        if (level.time % 35 != 0)
+            {
+            return;
+        
+            }
+
+        CVar capCVar = CVar.FindCVar("mod_regen_cap");
+        CVar amountCVar = CVar.FindCVar("mod_regen_amount");
+
+        double capPercentage = (capCVar ? capCVar.GetInt() : 25) / 100.0;
+        int healAmount = amountCVar ? amountCVar.GetInt() : 5;
+
+        for (int i = 0; i < MAXPLAYERS; i++)
+            {
+            if (playeringame[i] && players[i].mo)
+                {
+                PlayerPawn player = players[i].mo;
+                int regenCap = player.GetMaxHealth() * capPercentage;
+
+                if (damageCooldown[i] > 0)
+                    {
+                        damageCooldown[i]--;
+                    continue; 
+                
+                    }
+
+                if (player.health > 0 && player.health < regenCap)
+                    {
+                        player.GiveBody(healAmount, regenCap);
+                
+                    }
+                }
+            }
+        }
+
+        override void WorldThingDamaged(WorldEvent e)
+        {
+        if (e.Thing && e.Thing.player)
+            {
+            int playernum = e.Thing.PlayerNumber();
+            CVar delayCVar = CVar.FindCVar("mod_regen_delay");
+            int customDelay = delayCVar ? delayCVar.GetInt() : 5;
+            
+                damageCooldown[playernum] = customDelay; 
+        
+            }
+        }
+    }
