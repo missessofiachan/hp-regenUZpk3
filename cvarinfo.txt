@@ -1,6 +1,7 @@
-server
-int mod_regen_cap = 25;
-server
-int mod_regen_amount = 5;
-server
-int mod_regen_delay = 5;
+server int mod_regen_cap = 25;
+server int mod_regen_amount = 5;
+server int mod_regen_delay = 5;
+server bool mod_regen_enabled = true;
+server float mod_regen_crouch_mult = 1.0;
+server float mod_regen_still_mult = 1.0;
+server int mod_regen_mode = 0;

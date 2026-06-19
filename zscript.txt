@@ -1,58 +1,120 @@
-version
-"4.11"
+version "4.11"
 
 class HealthRegenHandler : EventHandler
-    {
+{
     int damageCooldown[MAXPLAYERS];
 
-        override void WorldTick()
+    override void WorldTick()
+    {
+        // Check if the mod is enabled
+        CVar enabledCVar = CVar.FindCVar("mod_regen_enabled");
+        if (enabledCVar && !enabledCVar.GetBool())
         {
-            // Check once every second (35 tics)
-        if (level.time % 35 != 0)
-            {
             return;
-        
+        }
+
+        // Decrement damage cooldowns every tick (35 tics = 1 second)
+        for (int i = 0; i < MAXPLAYERS; i++)
+        {
+            if (damageCooldown[i] > 0)
+            {
+                damageCooldown[i]--;
             }
+        }
+
+        // Check health regen once every second (35 tics)
+        if (level.time % 35 != 0)
+        {
+            return;
+        }
 
         CVar capCVar = CVar.FindCVar("mod_regen_cap");
         CVar amountCVar = CVar.FindCVar("mod_regen_amount");
+        CVar modeCVar = CVar.FindCVar("mod_regen_mode");
 
         double capPercentage = (capCVar ? capCVar.GetInt() : 25) / 100.0;
         int healAmount = amountCVar ? amountCVar.GetInt() : 5;
+        int regenMode = modeCVar ? modeCVar.GetInt() : 0;
 
         for (int i = 0; i < MAXPLAYERS; i++)
-            {
+        {
             if (playeringame[i] && players[i].mo)
-                {
+            {
                 PlayerPawn player = players[i].mo;
-                int regenCap = player.GetMaxHealth() * capPercentage;
+                int maxHealth = player.GetMaxHealth();
+                int regenCap = maxHealth;
+
+                if (regenMode == 0) // Standard Cap %
+                {
+                    regenCap = maxHealth * capPercentage;
+                }
+                else if (regenMode == 1) // Wolfenstein 20 HP segments
+                {
+                    int currentHealth = player.health;
+                    int segmentSize = 20;
+                    int nextSegment = ((currentHealth + segmentSize - 1) / segmentSize) * segmentSize;
+                    regenCap = nextSegment < maxHealth ? nextSegment : maxHealth;
+                }
+                else if (regenMode == 2) // Quake Champions BJ 25 HP segments
+                {
+                    int currentHealth = player.health;
+                    int segmentSize = 25;
+                    int nextSegment = ((currentHealth + segmentSize - 1) / segmentSize) * segmentSize;
+                    regenCap = nextSegment < maxHealth ? nextSegment : maxHealth;
+                }
 
                 if (damageCooldown[i] > 0)
+                {
+                    continue;
+                }
+
+                // Apply Crouch & Stillness Multipliers
+                double multiplier = 1.0;
+
+                // Check if crouching (crouchfactor < 1.0 or crouchdir is non-zero in PlayerInfo)
+                if (players[i].crouchfactor < 1.0 || players[i].crouchdir != 0)
+                {
+                    CVar crouchMultCVar = CVar.FindCVar("mod_regen_crouch_mult");
+                    if (crouchMultCVar)
                     {
-                        damageCooldown[i]--;
-                    continue; 
-                
+                        multiplier *= crouchMultCVar.GetFloat();
                     }
+                }
+
+                // Check if standing still (ignore vertical/gravity velocity)
+                if (player.vel.xy.Length() < 0.1)
+                {
+                    CVar stillMultCVar = CVar.FindCVar("mod_regen_still_mult");
+                    if (stillMultCVar)
+                    {
+                        multiplier *= stillMultCVar.GetFloat();
+                    }
+                }
+
+                int finalHealAmount = int(healAmount * multiplier);
 
                 if (player.health > 0 && player.health < regenCap)
-                    {
-                        player.GiveBody(healAmount, regenCap);
-                
-                    }
+                {
+                    player.GiveBody(finalHealAmount, regenCap);
                 }
             }
         }
+    }
 
-        override void WorldThingDamaged(WorldEvent e)
-        {
+    override void WorldThingDamaged(WorldEvent e)
+    {
         if (e.Thing && e.Thing.player)
-            {
+        {
             int playernum = e.Thing.PlayerNumber();
-            CVar delayCVar = CVar.FindCVar("mod_regen_delay");
-            int customDelay = delayCVar ? delayCVar.GetInt() : 5;
-            
-                damageCooldown[playernum] = customDelay; 
-        
+            if (playernum >= 0 && playernum < MAXPLAYERS)
+            {
+                CVar delayCVar = CVar.FindCVar("mod_regen_delay");
+                int customDelay = delayCVar ? delayCVar.GetInt() : 5;
+                
+                // Set cooldown in tics (seconds * 35) for precise tracking
+                damageCooldown[playernum] = customDelay * 35; 
             }
         }
     }
+}
+
