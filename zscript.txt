@@ -68,6 +68,15 @@ class HealthRegenHandler : EventHandler
                     continue;
                 }
 
+                bool isStill = player.vel.xy.Length() < 0.1;
+
+                // Check if only healing when still is enabled
+                CVar onlyStillCVar = CVar.FindCVar("mod_regen_only_still");
+                if (onlyStillCVar && onlyStillCVar.GetBool() && !isStill)
+                {
+                    continue;
+                }
+
                 // Apply Crouch & Stillness Multipliers
                 double multiplier = 1.0;
 
@@ -82,7 +91,7 @@ class HealthRegenHandler : EventHandler
                 }
 
                 // Check if standing still (ignore vertical/gravity velocity)
-                if (player.vel.xy.Length() < 0.1)
+                if (isStill)
                 {
                     CVar stillMultCVar = CVar.FindCVar("mod_regen_still_mult");
                     if (stillMultCVar)
