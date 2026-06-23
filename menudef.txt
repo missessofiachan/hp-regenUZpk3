@@ -24,6 +24,8 @@ OptionMenu
     Slider "Crouch Regen Multiplier", "mod_regen_crouch_mult", 1.0, 5.0, 0.1, 1
     Slider "Stillness Regen Multiplier", "mod_regen_still_mult", 1.0, 5.0, 0.1, 1
     Option "Only Heal When Still", "mod_regen_only_still", "OnOff"
+    Option "Spawn Healing Particles", "mod_regen_particles", "OnOff"
+    Option "Play Healing Sound", "mod_regen_sound", "OnOff"
     
     StaticText ""
     StaticText "--- Standard Difficulty Presets ---"

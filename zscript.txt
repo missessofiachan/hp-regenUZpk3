@@ -4,15 +4,33 @@ class HealthRegenHandler : EventHandler
 {
     int damageCooldown[MAXPLAYERS];
 
+    CVar enabledCVar;
+    CVar capCVar;
+    CVar amountCVar;
+    CVar modeCVar;
+    CVar onlyStillCVar;
+    CVar crouchMultCVar;
+    CVar stillMultCVar;
+    CVar delayCVar;
+    CVar particlesCVar;
+    CVar soundCVar;
+
+    override void OnRegister()
+    {
+        enabledCVar = CVar.FindCVar("mod_regen_enabled");
+        capCVar = CVar.FindCVar("mod_regen_cap");
+        amountCVar = CVar.FindCVar("mod_regen_amount");
+        modeCVar = CVar.FindCVar("mod_regen_mode");
+        onlyStillCVar = CVar.FindCVar("mod_regen_only_still");
+        crouchMultCVar = CVar.FindCVar("mod_regen_crouch_mult");
+        stillMultCVar = CVar.FindCVar("mod_regen_still_mult");
+        delayCVar = CVar.FindCVar("mod_regen_delay");
+        particlesCVar = CVar.FindCVar("mod_regen_particles");
+        soundCVar = CVar.FindCVar("mod_regen_sound");
+    }
+
     override void WorldTick()
     {
-        // Check if the mod is enabled
-        CVar enabledCVar = CVar.FindCVar("mod_regen_enabled");
-        if (enabledCVar && !enabledCVar.GetBool())
-        {
-            return;
-        }
-
         // Decrement damage cooldowns every tick (35 tics = 1 second)
         for (int i = 0; i < MAXPLAYERS; i++)
         {
@@ -22,15 +40,17 @@ class HealthRegenHandler : EventHandler
             }
         }
 
+        // Check if the mod is enabled
+        if (enabledCVar && !enabledCVar.GetBool())
+        {
+            return;
+        }
+
         // Check health regen once every second (35 tics)
         if (level.time % 35 != 0)
         {
             return;
         }
-
-        CVar capCVar = CVar.FindCVar("mod_regen_cap");
-        CVar amountCVar = CVar.FindCVar("mod_regen_amount");
-        CVar modeCVar = CVar.FindCVar("mod_regen_mode");
 
         double capPercentage = (capCVar ? capCVar.GetInt() : 25) / 100.0;
         int healAmount = amountCVar ? amountCVar.GetInt() : 5;
@@ -71,7 +91,6 @@ class HealthRegenHandler : EventHandler
                 bool isStill = player.vel.xy.Length() < 0.1;
 
                 // Check if only healing when still is enabled
-                CVar onlyStillCVar = CVar.FindCVar("mod_regen_only_still");
                 if (onlyStillCVar && onlyStillCVar.GetBool() && !isStill)
                 {
                     continue;
@@ -83,7 +102,6 @@ class HealthRegenHandler : EventHandler
                 // Check if crouching (crouchfactor < 1.0 or crouchdir is non-zero in PlayerInfo)
                 if (players[i].crouchfactor < 1.0 || players[i].crouchdir != 0)
                 {
-                    CVar crouchMultCVar = CVar.FindCVar("mod_regen_crouch_mult");
                     if (crouchMultCVar)
                     {
                         multiplier *= crouchMultCVar.GetFloat();
@@ -93,7 +111,6 @@ class HealthRegenHandler : EventHandler
                 // Check if standing still (ignore vertical/gravity velocity)
                 if (isStill)
                 {
-                    CVar stillMultCVar = CVar.FindCVar("mod_regen_still_mult");
                     if (stillMultCVar)
                     {
                         multiplier *= stillMultCVar.GetFloat();
@@ -104,7 +121,40 @@ class HealthRegenHandler : EventHandler
 
                 if (player.health > 0 && player.health < regenCap)
                 {
+                    int oldHealth = player.health;
                     player.GiveBody(finalHealAmount, regenCap);
+                    
+                    if (player.health > oldHealth)
+                    {
+                        // Play a soft sound effect for healing
+                        if (soundCVar && soundCVar.GetBool())
+                        {
+                            player.A_StartSound("misc/i_pk_up", CHAN_ITEM, CHANF_LOCAL, 0.3);
+                        }
+                        
+                        // Spawn custom visual sparkles/particles around player
+                        if (particlesCVar && particlesCVar.GetBool())
+                        {
+                            for (int j = 0; j < 12; j++)
+                            {
+                                double angle = FRandom[Regen](0, 360);
+                                double dist = FRandom[Regen](10, 20);
+                                double vx = Cos(angle) * FRandom[Regen](0.1, 0.4);
+                                double vy = Sin(angle) * FRandom[Regen](0.1, 0.4);
+                                double vz = FRandom[Regen](0.2, 0.8);
+                                
+                                player.A_SpawnParticle(
+                                    "00FF00",
+                                    SPF_FULLBRIGHT,
+                                    35,
+                                    FRandom[Regen](2, 3),
+                                    angle,
+                                    dist, 0, FRandom[Regen](8, player.height - 8),
+                                    vx, vy, vz
+                                );
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -117,7 +167,6 @@ class HealthRegenHandler : EventHandler
             int playernum = e.Thing.PlayerNumber();
             if (playernum >= 0 && playernum < MAXPLAYERS)
             {
-                CVar delayCVar = CVar.FindCVar("mod_regen_delay");
                 int customDelay = delayCVar ? delayCVar.GetInt() : 5;
                 
                 // Set cooldown in tics (seconds * 35) for precise tracking
