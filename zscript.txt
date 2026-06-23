@@ -8,6 +8,7 @@ class HealthRegenHandler : EventHandler
     CVar capCVar;
     CVar amountCVar;
     CVar modeCVar;
+    CVar segmentSizeCVar;
     CVar onlyStillCVar;
     CVar crouchMultCVar;
     CVar stillMultCVar;
@@ -21,6 +22,7 @@ class HealthRegenHandler : EventHandler
         capCVar = CVar.FindCVar("mod_regen_cap");
         amountCVar = CVar.FindCVar("mod_regen_amount");
         modeCVar = CVar.FindCVar("mod_regen_mode");
+        segmentSizeCVar = CVar.FindCVar("mod_regen_segment_size");
         onlyStillCVar = CVar.FindCVar("mod_regen_only_still");
         crouchMultCVar = CVar.FindCVar("mod_regen_crouch_mult");
         stillMultCVar = CVar.FindCVar("mod_regen_still_mult");
@@ -68,17 +70,12 @@ class HealthRegenHandler : EventHandler
                 {
                     regenCap = maxHealth * capPercentage;
                 }
-                else if (regenMode == 1) // Wolfenstein 20 HP segments
+                else if (regenMode == 1) // Dynamic Segment Mode
                 {
                     int currentHealth = player.health;
-                    int segmentSize = 20;
-                    int nextSegment = ((currentHealth + segmentSize - 1) / segmentSize) * segmentSize;
-                    regenCap = nextSegment < maxHealth ? nextSegment : maxHealth;
-                }
-                else if (regenMode == 2) // Quake Champions BJ 25 HP segments
-                {
-                    int currentHealth = player.health;
-                    int segmentSize = 25;
+                    // Pull from CVar, ensure it never drops to 0 to prevent crash (divide by zero)
+                    int segmentSize = segmentSizeCVar ? max(1, segmentSizeCVar.GetInt()) : 20; 
+                    
                     int nextSegment = ((currentHealth + segmentSize - 1) / segmentSize) * segmentSize;
                     regenCap = nextSegment < maxHealth ? nextSegment : maxHealth;
                 }
@@ -89,7 +86,7 @@ class HealthRegenHandler : EventHandler
                 }
 
                 bool isStill = player.vel.xy.Length() < 0.1;
-
+                
                 // Check if only healing when still is enabled
                 if (onlyStillCVar && onlyStillCVar.GetBool() && !isStill)
                 {
@@ -98,7 +95,7 @@ class HealthRegenHandler : EventHandler
 
                 // Apply Crouch & Stillness Multipliers
                 double multiplier = 1.0;
-
+                
                 // Check if crouching (crouchfactor < 1.0 or crouchdir is non-zero in PlayerInfo)
                 if (players[i].crouchfactor < 1.0 || players[i].crouchdir != 0)
                 {
@@ -118,7 +115,7 @@ class HealthRegenHandler : EventHandler
                 }
 
                 int finalHealAmount = int(healAmount * multiplier);
-
+                
                 if (player.health > 0 && player.health < regenCap)
                 {
                     int oldHealth = player.health;
@@ -142,7 +139,6 @@ class HealthRegenHandler : EventHandler
                                 double vx = Cos(angle) * FRandom[Regen](0.1, 0.4);
                                 double vy = Sin(angle) * FRandom[Regen](0.1, 0.4);
                                 double vz = FRandom[Regen](0.2, 0.8);
-                                
                                 player.A_SpawnParticle(
                                     "00FF00",
                                     SPF_FULLBRIGHT,
@@ -170,9 +166,8 @@ class HealthRegenHandler : EventHandler
                 int customDelay = delayCVar ? delayCVar.GetInt() : 5;
                 
                 // Set cooldown in tics (seconds * 35) for precise tracking
-                damageCooldown[playernum] = customDelay * 35; 
+                damageCooldown[playernum] = customDelay * 35;
             }
         }
     }
 }
-

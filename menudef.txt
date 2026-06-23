@@ -1,8 +1,7 @@
 OptionValue "RegenModeSelect"
 {
     0, "Standard Cap %"
-    1, "Wolfenstein (20 HP Segments)"
-    2, "Quake Champions (25 HP Segments)"
+    1, "Segment-Based"
 }
 
 AddOptionMenu
@@ -19,8 +18,10 @@ OptionMenu
     Option "Enable Regeneration", "mod_regen_enabled", "OnOff"
     Option "Regeneration Mode", "mod_regen_mode", "RegenModeSelect"
     Slider "Regen Cap (% of Max HP)", "mod_regen_cap", 5, 200, 5
+    Slider "Segment Size (HP chunks)", "mod_regen_segment_size", 5, 100, 5
     Slider "Regen Amount (HP per sec)", "mod_regen_amount", 1, 100, 1
     Slider "Regen Delay (Seconds)", "mod_regen_delay", 0, 30, 1
+  
     Slider "Crouch Regen Multiplier", "mod_regen_crouch_mult", 1.0, 5.0, 0.1, 1
     Slider "Stillness Regen Multiplier", "mod_regen_still_mult", 1.0, 5.0, 0.1, 1
     Option "Only Heal When Still", "mod_regen_only_still", "OnOff"
@@ -41,7 +42,7 @@ OptionMenu
     StaticText "--- Game Themed Presets ---"
     StaticText ""
 
-    Command "Preset: Wolfenstein TNO (20 HP Segments, 5 HP/s, 5s Delay)", "mod_regen_mode 1; mod_regen_amount 5; mod_regen_delay 5; mod_regen_only_still false"
-    Command "Preset: Quake Champions BJ (25 HP Segments, 5 HP/s, 3s Delay)", "mod_regen_mode 2; mod_regen_amount 5; mod_regen_delay 3; mod_regen_only_still false"
+    Command "Preset: Wolfenstein TNO (20 HP Segments, 5 HP/s, 5s Delay)", "mod_regen_mode 1; mod_regen_segment_size 20; mod_regen_amount 5; mod_regen_delay 5; mod_regen_only_still false"
+    Command "Preset: Quake Champions BJ (25 HP Segments, 5 HP/s, 3s Delay)", "mod_regen_mode 1; mod_regen_segment_size 25; mod_regen_amount 5; mod_regen_delay 3; mod_regen_only_still false"
     Command "Preset: Call of Duty (100% Cap, 20 HP/s, 5s Delay)", "mod_regen_mode 0; mod_regen_cap 100; mod_regen_amount 20; mod_regen_delay 5; mod_regen_only_still false"
 }
