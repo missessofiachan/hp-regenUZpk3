@@ -4,45 +4,61 @@ OptionValue "RegenModeSelect"
     1, "Segment-Based"
 }
 
-AddOptionMenu
-"OptionsMenu"
+AddOptionMenu "OptionsMenu"
 {
     Submenu "Health Regen Settings", "RegenModMenu"
 }
 
-OptionMenu
-"RegenModMenu"
+OptionMenu "RegenModMenu"
 {
     Title "Health Regen Configuration"
-    
+
+    Submenu "Core Healing Mechanics", "RegenCoreSubMenu"
+    Submenu "Movement & Audio-Visuals", "RegenMoveVisualSubMenu"
+    Submenu "Configuration Presets", "RegenPresetsSubMenu"
+}
+
+// --- PANEL 1: CORE REGEN OPTIONS ---
+OptionMenu "RegenCoreSubMenu"
+{
+    Title "Core Healing Mechanics"
+
     Option "Enable Regeneration", "mod_regen_enabled", "OnOff"
     Option "Regeneration Mode", "mod_regen_mode", "RegenModeSelect"
     Slider "Regen Cap (% of Max HP)", "mod_regen_cap", 5, 200, 5
     Slider "Segment Size (HP chunks)", "mod_regen_segment_size", 5, 100, 5
     Slider "Regen Amount (HP per sec)", "mod_regen_amount", 1, 100, 1
     Slider "Regen Delay (Seconds)", "mod_regen_delay", 0, 30, 1
-  
+}
+
+// --- PANEL 2: POSTURE & GAME FEEL ---
+OptionMenu "RegenMoveVisualSubMenu"
+{
+    Title "Movement & Audio-Visuals"
+
     Slider "Crouch Regen Multiplier", "mod_regen_crouch_mult", 1.0, 5.0, 0.1, 1
     Slider "Stillness Regen Multiplier", "mod_regen_still_mult", 1.0, 5.0, 0.1, 1
     Option "Only Heal When Still", "mod_regen_only_still", "OnOff"
     Option "Spawn Healing Particles", "mod_regen_particles", "OnOff"
     Option "Play Healing Sound", "mod_regen_sound", "OnOff"
-    
-    StaticText ""
-    StaticText "--- Standard Difficulty Presets ---"
-    StaticText ""
+}
 
-    Command "Preset: Power Trip (Easy - 100% Cap, 15 HP/s, 2s Delay)", "mod_regen_mode 0; mod_regen_cap 100; mod_regen_amount 15; mod_regen_delay 2; mod_regen_only_still false"
-    Command "Preset: Casual (Medium-Easy - 50% Cap, 10 HP/s, 3s Delay)", "mod_regen_mode 0; mod_regen_cap 50; mod_regen_amount 10; mod_regen_delay 3; mod_regen_only_still false"
-    Command "Preset: Balanced (Normal - 25% Cap, 5 HP/s, 5s Delay)", "mod_regen_mode 0; mod_regen_cap 25; mod_regen_amount 5; mod_regen_delay 5; mod_regen_only_still false"
-    Command "Preset: Tough (Medium-Hard - 20% Cap, 2 HP/s, 5s Delay)", "mod_regen_mode 0; mod_regen_cap 20; mod_regen_amount 2; mod_regen_delay 5; mod_regen_only_still false"
-    Command "Preset: Hardcore (Hard - 15% Cap, 1 HP/s, 7s Delay)", "mod_regen_mode 0; mod_regen_cap 15; mod_regen_amount 1; mod_regen_delay 7; mod_regen_only_still false"
+// --- PANEL 3: PRESETS SYSTEM ---
+OptionMenu "RegenPresetsSubMenu"
+{
+    Title "Configuration Presets"
+
+    StaticText "--- Standard Difficulty Presets ---"
+    Command "Preset: Power Trip (Easy - 100% Cap)", "mod_regen_mode 0; mod_regen_cap 100; mod_regen_amount 15; mod_regen_delay 2; mod_regen_only_still false"
+    Command "Preset: Casual (Medium-Easy - 50% Cap)", "mod_regen_mode 0; mod_regen_cap 50; mod_regen_amount 10; mod_regen_delay 3; mod_regen_only_still false"
+    Command "Preset: Balanced (Normal - 25% Cap)", "mod_regen_mode 0; mod_regen_cap 25; mod_regen_amount 5; mod_regen_delay 5; mod_regen_only_still false"
+    Command "Preset: Tough (Medium-Hard - 20% Cap)", "mod_regen_mode 0; mod_regen_cap 20; mod_regen_amount 2; mod_regen_delay 5; mod_regen_only_still false"
+    Command "Preset: Hardcore (Hard - 15% Cap)", "mod_regen_mode 0; mod_regen_cap 15; mod_regen_amount 1; mod_regen_delay 7; mod_regen_only_still false"
 
     StaticText ""
     StaticText "--- Game Themed Presets ---"
-    StaticText ""
-
-    Command "Preset: Wolfenstein TNO (20 HP Segments, 5 HP/s, 5s Delay)", "mod_regen_mode 1; mod_regen_segment_size 20; mod_regen_amount 5; mod_regen_delay 5; mod_regen_only_still false"
-    Command "Preset: Quake Champions BJ (25 HP Segments, 5 HP/s, 3s Delay)", "mod_regen_mode 1; mod_regen_segment_size 25; mod_regen_amount 5; mod_regen_delay 3; mod_regen_only_still false"
-    Command "Preset: Call of Duty (100% Cap, 20 HP/s, 5s Delay)", "mod_regen_mode 0; mod_regen_cap 100; mod_regen_amount 20; mod_regen_delay 5; mod_regen_only_still false"
+    Command "Preset: Wolfenstein TNO (20 HP Segments)", "mod_regen_mode 1; mod_regen_segment_size 20; mod_regen_amount 5; mod_regen_delay 5; mod_regen_only_still false"
+    Command "Preset: Quake Champions BJ (25 HP Segments)", "mod_regen_mode 1; mod_regen_segment_size 25; mod_regen_amount 5; mod_regen_delay 3; mod_regen_only_still false"
+    Command "Preset: Call of Duty (100% Cap, 20 HP/s)", "mod_regen_mode 0; mod_regen_cap 100; mod_regen_amount 20; mod_regen_delay 5; mod_regen_only_still false"
 }
+

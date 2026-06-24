@@ -33,7 +33,7 @@ class HealthRegenHandler : EventHandler
 
     override void WorldTick()
     {
-        // Decrement damage cooldowns every tick (35 tics = 1 second)
+        // Decrement damage cooldowns every single tick (35 tics = 1 second)
         for (int i = 0; i < MAXPLAYERS; i++)
         {
             if (damageCooldown[i] > 0)
@@ -42,20 +42,20 @@ class HealthRegenHandler : EventHandler
             }
         }
 
-        // Check if the mod is enabled
+        // Halt operations immediately if the module is disabled
         if (enabledCVar && !enabledCVar.GetBool())
         {
             return;
         }
 
-        // Check health regen once every second (35 tics)
+        // Execute core health evaluations exactly once per second
         if (level.time % 35 != 0)
         {
             return;
         }
 
         double capPercentage = (capCVar ? capCVar.GetInt() : 25) / 100.0;
-        int healAmount = amountCVar ? amountCVar.GetInt() : 5;
+        int baseHealAmount = amountCVar ? amountCVar.GetInt() : 5;
         int regenMode = modeCVar ? modeCVar.GetInt() : 0;
 
         for (int i = 0; i < MAXPLAYERS; i++)
@@ -66,70 +66,64 @@ class HealthRegenHandler : EventHandler
                 int maxHealth = player.GetMaxHealth();
                 int regenCap = maxHealth;
 
+                // --- 1. HEALTH CEILING EVALUATION ---
                 if (regenMode == 0) // Standard Cap %
                 {
-                    regenCap = maxHealth * capPercentage;
+                    regenCap = int(maxHealth * capPercentage);
                 }
-                else if (regenMode == 1) // Dynamic Segment Mode
+                else if (regenMode == 1) // Segment-Based Mode
                 {
                     int currentHealth = player.health;
-                    // Pull from CVar, ensure it never drops to 0 to prevent crash (divide by zero)
                     int segmentSize = segmentSizeCVar ? max(1, segmentSizeCVar.GetInt()) : 20; 
                     
                     int nextSegment = ((currentHealth + segmentSize - 1) / segmentSize) * segmentSize;
                     regenCap = nextSegment < maxHealth ? nextSegment : maxHealth;
                 }
 
+                // Honor incoming active damage cooldowns
                 if (damageCooldown[i] > 0)
                 {
                     continue;
                 }
 
+                // --- 2. MOVEMENT RESTRICTION CHECK ---
                 bool isStill = player.vel.xy.Length() < 0.1;
-                
-                // Check if only healing when still is enabled
                 if (onlyStillCVar && onlyStillCVar.GetBool() && !isStill)
                 {
                     continue;
                 }
 
-                // Apply Crouch & Stillness Multipliers
-                double multiplier = 1.0;
-                
-                // Check if crouching (crouchfactor < 1.0 or crouchdir is non-zero in PlayerInfo)
+                int finalHealAmount = baseHealAmount;
+
+                // --- 3. POSTURE AND STILLNESS MULTIPLIERS ---
+                double playerStateMultiplier = 1.0;
                 if (players[i].crouchfactor < 1.0 || players[i].crouchdir != 0)
                 {
-                    if (crouchMultCVar)
-                    {
-                        multiplier *= crouchMultCVar.GetFloat();
-                    }
+                    if (crouchMultCVar) playerStateMultiplier *= crouchMultCVar.GetFloat();
                 }
 
-                // Check if standing still (ignore vertical/gravity velocity)
                 if (isStill)
                 {
-                    if (stillMultCVar)
-                    {
-                        multiplier *= stillMultCVar.GetFloat();
-                    }
+                    if (stillMultCVar) playerStateMultiplier *= stillMultCVar.GetFloat();
                 }
 
-                int finalHealAmount = int(healAmount * multiplier);
-                
+                finalHealAmount = int(finalHealAmount * playerStateMultiplier);
+
+                // --- 4. EXECUTE BODY RESTORATION ---
                 if (player.health > 0 && player.health < regenCap)
                 {
                     int oldHealth = player.health;
-                    player.GiveBody(finalHealAmount, regenCap);
+                    player.GiveBody(max(1, finalHealAmount), regenCap);
                     
                     if (player.health > oldHealth)
                     {
-                        // Play a soft sound effect for healing
+                        // Audio response
                         if (soundCVar && soundCVar.GetBool())
                         {
                             player.A_StartSound("misc/i_pk_up", CHAN_ITEM, CHANF_LOCAL, 0.3);
                         }
                         
-                        // Spawn custom visual sparkles/particles around player
+                        // Particle FX response
                         if (particlesCVar && particlesCVar.GetBool())
                         {
                             for (int j = 0; j < 12; j++)
@@ -165,7 +159,7 @@ class HealthRegenHandler : EventHandler
             {
                 int customDelay = delayCVar ? delayCVar.GetInt() : 5;
                 
-                // Set cooldown in tics (seconds * 35) for precise tracking
+                // Log down the total ticks remaining (Seconds * 35 Engine Tics)
                 damageCooldown[playernum] = customDelay * 35;
             }
         }
