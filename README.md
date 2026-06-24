@@ -3,7 +3,7 @@
 A lightweight, highly customizable ZScript mod that adds dynamic health regeneration mechanics to Doom. Whether you want to recreate modern shooter pacing (like *Call of Duty*), tactical segment-based healing (like *Wolfenstein* or *Quake Champions*), or fine-tune your own custom challenge, this mod provides all the options you need.
 
 ---
-
+![GZDoom Compatible](https://img.shields.io/badge/GZDoom-v4.10%2B-blue)
 ## 🚀 Key Features
 
 * **Two Unique Healing Modes:** Switch between Standard Cap (percentage-based) and a fully customizable Segment-Based (chunked) regeneration.
